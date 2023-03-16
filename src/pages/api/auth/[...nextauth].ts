@@ -41,7 +41,7 @@ export const authOptions = {
               q.Index('user_by_email'),
               q.Casefold(user.email)
             )
-          )
+          ),
         )
 
         return true;
