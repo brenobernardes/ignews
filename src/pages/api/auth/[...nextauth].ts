@@ -19,7 +19,7 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async signIn(user, account, profile) {
+    async signIn({user, account, profile}) {
       const { email } = user;
 
       try {
@@ -30,7 +30,7 @@ export const authOptions = {
                 q.Match('user_by_email'),
                 q.Casefold(user.email)
               )              
-            )
+            ), "Usuário não existe", "Usuário existe"
           ),
           q.Create(
             q.Collection('users'),
