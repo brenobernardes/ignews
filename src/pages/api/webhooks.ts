@@ -23,7 +23,10 @@ export const config = {
 }
 
 const relevantEvents = new Set([
-    'checkout.session.completed'
+    'checkout.session.completed',
+    'checkout.subscription.created',
+    'checkout.subscription.updated',
+    'checkout.subscription.deleted'
 ])
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -44,13 +47,27 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         if (relevantEvents.has(type)) {
             try {
                 switch (type) {
+                    case 'checkout.subscription.created':
+                    case 'checkout.subscription.updated':
+                    case 'checkout.subscription.deleted':
+                        const subscription = event.data.object as Stripe.Subscription;
+
+                        await saveSubscription(
+                            subscription.id,
+                            subscription.customer.toString(),
+                            type === 'checkout.subscription.created'
+                        );
+
+                        break;
+
                     case 'checkout.session.completed':
                         
                     const checkoutSession = event.data.object as Stripe.Checkout.Session
 
                     await saveSubscription(
                         checkoutSession.subscription.toString(),
-                        checkoutSession.customer.toString()
+                        checkoutSession.customer.toString(),
+                        true
                     )
 
                     break;                    
