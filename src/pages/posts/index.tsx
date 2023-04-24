@@ -3,8 +3,20 @@ import styles from './styles.module.scss';
 import Prismic from '@prismicio/client';
 import { GetStaticProps } from 'next';
 import { getPrismicClient } from '../../services/prismic';
+import * as prismicH from '@prismicio/helpers'
 
-export default function Posts() {
+type Post = {
+    slug: string;
+    title: string;
+    excerpt: string;
+    updatedAt: string;
+}
+
+interface PostsProps {
+    posts: Post[]
+}
+
+export default function Posts({ posts }: PostsProps) {
     return (
         <>
             <Head>
@@ -13,23 +25,13 @@ export default function Posts() {
 
             <main className={styles.container}>
                 <div className={styles.posts}>
-                    <a href='#'>
-                        <time>13 de Abril de 2023</time>
-                        <strong>Creating posts</strong>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Optio, quos architecto voluptate ipsa veritatis deleniti, quis facere vero tempore expedita ducimus fugiat eos eveniet. Placeat repudiandae nisi deserunt facilis hic!</p>
-                    </a>
-
-                    <a href='#'>
-                        <time>13 de Abril de 2023</time>
-                        <strong>Creating posts</strong>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Eveniet dolor deleniti earum porro eum eaque, praesentium velit officia delectus expedita, dolore id tempora voluptas hic. Aliquid at explicabo culpa dolore.</p>
-                    </a>
-
-                    <a href='#'>
-                        <time>13 de Abril de 2023</time>
-                        <strong>Creating posts</strong>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio praesentium at impedit nesciunt soluta sunt incidunt sit odit. Magni ratione deserunt laudantium beatae est amet odit non eveniet quibusdam dolorem.</p>
-                    </a>
+                    { posts.map(post => (
+                        <a key={post.slug} href='#'>
+                            <time>{post.updatedAt}</time>
+                            <strong>{post.title}</strong>
+                            <p>{post.excerpt}</p>
+                        </a>
+                    ))}
                 </div>
             </main>
         </>
@@ -40,17 +42,30 @@ export const getStaticProps: GetStaticProps = async () => {
     const prismic = getPrismicClient()
 
     const response = await prismic.query([
-        Prismic.predicate.at('document.type', 'publication')
+        Prismic.predicates.at('document.type', 'publication')
     ], {
         fetch: ['publication.title', 'publication.content'],
         pageSize: 100
     })
 
-    console.log(response)
+    const posts = response.results.map(post => {
+        return {
+            slug: post.uid,
+            title: prismicH.asText(post.data.title),
+            excerpt: post.data.content.find(content => content.type === 'paragraph')?.text ?? '',
+            updatedAt: new Date(post.last_publication_date).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            })
+        }
+    })
+
+    console.log(JSON.stringify(response, null, 2))
 
     return {
         props: {
-
+            posts
         }
     }
 }
