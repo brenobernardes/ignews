@@ -9,8 +9,9 @@ interface SubscribeButtonProps {
 }
 
 export function SubscribeButton ({priceId}: SubscribeButtonProps) {
-    const session = useSession();
+    const { data:session } = useSession();
     const router = useRouter();
+    console.log(session)
 
     async function handleSubscribe() {
         if (!session) {
@@ -18,9 +19,11 @@ export function SubscribeButton ({priceId}: SubscribeButtonProps) {
             return;
         }
 
-        if(session.activeSubscription) {
-            router.push('/post');
+        if(session) {
+            router.push('/posts');
             return;
+
+            console.log(session)
         }
 
         try {
